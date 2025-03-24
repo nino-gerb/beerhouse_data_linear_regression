@@ -50,12 +50,6 @@ The aim of the project is to:
 
 ---
 
-## 📄 Report
-
-A detailed PDF report is generated via RMarkdown, explaining the model building process, results, and conclusions. It follows best practices for statistical modeling, including residual diagnostics and proper reporting of p-values and assumptions.
-
----
-
 ## 📚 Reference
 
 - Clay, J. (1857). *On the Relation Between Crime, Popular Instruction, Attendance on Religious Worship, and Beer-House*.  

@@ -1,0 +1,487 @@
+---
+title: "Relationship between Crime and Social Factors in 1850s British Counties"
+author: "Your Name"
+output:
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 12pt
+geometry: margin=2.5cm
+header-includes:
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[L]{Your Name}
+  - \fancyhead[R]{\thepage}
+  - \fancyfoot[C]{}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5)
+```
+
+# Introduction
+
+The goal of this analysis is to investigate the relationship between crime rates and certain social factors in mid-19th century British counties. The dataset is sourced from John Clay's 1857 study, examining education, religious worship, and the prevalence of beer houses in relation to crime.
+
+## Variables:
+- **Criminals per 100k population**: Number of convicted criminals per 100,000 inhabitants.
+- **Ale/Beer Houses per 100k**: Density of public drinking establishments.
+- **Attendants at school per 10k**: Proxy for education level.
+- **Attendants at public worship per 2000**: Proxy for religious observance.
+
+The scientific question is: *How do education, religious attendance, and beer house prevalence relate to crime rates in 19th-century British counties?*
+
+---
+
+# Data Loading and Cleaning
+
+```{r libraies}
+library(GGally)
+```
+
+
+```{r load-data}
+url <- "http://users.stat.ufl.edu/~winner/data/beerhall.dat"
+beer_data <- read.fwf(file=url, widths=c(16,-1,19,-6,1,-4,4,-4,4,-4,4,-4,4),
+                      col.names=c("County","RegionName","RegionCode",
+                                  "Criminals","BeerHouses","School","Church"))
+beer_data$RegionCode <- factor(beer_data$RegionCode)
+summary(beer_data)
+```
+
+---
+
+# Exploratory Data Analysis (EDA)
+
+## Univariate Summaries
+
+```{r summary-stats}
+summary(beer_data[, c("Criminals", "BeerHouses", "School", "Church")])
+```
+
+## Bivariate Correlations
+
+# Linear relationships 
+```{r correlation-matrix}
+cor_matrix <- cor(beer_data[, c("Criminals", "BeerHouses", "School", "Church")])
+print(round(cor_matrix, 2))
+```
+linear relationships: 
+           Criminals BeerHouses School Church
+Criminals       1.00       0.46  -0.23   0.00
+BeerHouses      0.46       1.00   0.14   0.15
+School         -0.23       0.14   1.00   0.60
+Church          0.00       0.15   0.60   1.00
+
+
+# Non linear relationships
+## Compute mutual information for each pair of variables
+```{r correlation-matrix}
+mi_matrix <- mutinformation(beer_data[, c("Criminals", "BeerHouses", "School", "Church")])
+
+# Print the mutual information matrix
+print(round(mi_matrix, 2))
+```
+
+non-linear relationships
+           Criminals BeerHouses School Church
+Criminals       3.55       3.52   3.05   3.48
+BeerHouses      3.52       3.65   3.16   3.58
+School          3.05       3.16   3.19   3.12
+Church          3.48       3.58   3.12   3.62
+
+## Distribution of Crime Rates
+
+```{r plot-histogram}
+library(ggplot2)
+ggplot(beer_data, aes(x=Criminals)) + 
+  geom_histogram(bins=10, fill="blue", alpha=0.5) + 
+  labs(title="Distribution of Crime Rates", x="Criminals per 100k", y="Frequency")
+```
+
+## Scatterplots
+
+```{r scatterplots}
+ggplot(beer_data, aes(x=BeerHouses, y=Criminals)) +
+  geom_point() +
+  geom_smooth(method="lm", col="blue") +
+  labs(title="Crime Rate vs. Beer Houses", x="Beer Houses per 100k", y="Criminals per 100k")
+```
+```{r scatterplots}
+
+ggplot(beer_data, aes(x=School, y=Criminals)) +
+  geom_point() +
+  geom_smooth(method="lm", col="red") +
+  labs(title="Crime Rate vs. School Attendance", x="School Attendance per 10k", y="Criminals per 100k")
+```
+
+
+```{r scatterplots}
+
+ggplot(beer_data, aes(x=Church, y=Criminals)) +
+  geom_point() +
+  geom_smooth(method="lm", col="#00ff7b") +
+  labs(title="Crime Rate vs. Church Attendance", x="Church Attendance per 10k", y="Criminals per 100k")
+```
+```{r scatterplots}
+# Histogram for Crime Rate (Criminals per 100k)
+ggplot(beer_data, aes(x = Criminals)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Crime Rate (Criminals per 100k)",
+       x = "Criminals per 100k", y = "Frequency")
+```
+```{r scatterplots}
+# Histogram for Beer Houses per 100k
+ggplot(beer_data, aes(x = BeerHouses)) +
+  geom_histogram(binwidth = 50, fill = "darkorange", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Beer Houses per 100k",
+       x = "Beer Houses per 100k", y = "Frequency")
+```
+```{r scatterplots}
+# Histogram for School Attendance per 10k
+ggplot(beer_data, aes(x = School)) +
+  geom_histogram(binwidth = 50, fill = "darkgreen", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of School Attendance per 10k",
+       x = "School Attendance per 10k", y = "Frequency")
+```
+```{r scatterplots}
+# Histogram for Church Attendance per 2000
+ggplot(beer_data, aes(x = Church)) +
+  geom_histogram(binwidth = 50, fill = "purple", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Church Attendance per 2000",
+       x = "Church Attendance per 2000", y = "Frequency")
+```
+
+```{r scatterplots}
+# Scatterplot: Crime Rate vs. Beer Houses
+ggplot(beer_data, aes(x = BeerHouses, y = Criminals)) +
+  geom_point(color = "darkorange", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  labs(title = "Crime Rate vs. Beer Houses",
+       x = "Beer Houses per 100k", y = "Criminals per 100k")
+```
+
+```{r scatterplots}
+# Scatterplot: Crime Rate vs. School Attendance
+ggplot(beer_data, aes(x = School, y = Criminals)) +
+  geom_point(color = "darkgreen", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  labs(title = "Crime Rate vs. School Attendance",
+       x = "School Attendance per 10k", y = "Criminals per 100k")
+```
+
+```{r scatterplots}
+# Scatterplot: Crime Rate vs. Church Attendance
+ggplot(beer_data, aes(x = Church, y = Criminals)) +
+  geom_point(color = "purple", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  labs(title = "Crime Rate vs. Church Attendance",
+       x = "Church Attendance per 2000", y = "Criminals per 100k")
+```
+
+# Better analysis of correlation and features 
+```{r scatterplot_matrix}
+# Scatterplot Matrix (Pair Plot) for all numerical variables
+ggpairs(beer_data[, c("Criminals", "BeerHouses", "School", "Church")],
+        upper = list(continuous = wrap("cor", size = 5)),
+        lower = list(continuous = wrap("smooth", method = "lm", color = "blue")))
+```
+
+Schools and churches are highly correlated with 0.597***, This and the non-linear trend
+explored later seems to make churches a redondant and non-significant feature. It seems 
+to be reasonable to concetrate on Schools and Beerhouses to create a sound and simple model
+
+
+# Relationship of criminals and beerhouses 
+```{r scatterplots_beerhouses_criminals}
+ggplot(beer_data, aes(x = BeerHouses, y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Beer Houses (LOESS Curve)", 
+       x = "Beer Houses per 100k", y = "Criminals per 100k")
+
+```
+seems to have a logaritimic relationship
+
+# log transfomration of the beerhouses 
+```{r scatterplots_beerhouses_criminals}
+ggplot(beer_data, aes(x = log(BeerHouses), y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Beer Houses (LOESS Curve)", 
+       x = "Beer Houses per 100k", y = "Criminals per 100k")
+```
+No better relationship possible (sqrt etc i tried several), This lead us 
+to the assumption that there is a saturation of the relationship after a 
+certain point between criminals and beerhouses 
+
+# Relationship of criminals and schools 
+```{r scatterplots_schools_criminals}
+ggplot(beer_data, aes(x = School, y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Schools (LOESS Curve)", 
+       x = "Schools attendence per 10k", y = "Criminals per 100k")
+
+```
+linear relationship, something cosinus would maybe be appropriate but hard 
+to calibrate therefore I leave it as it is. Often these transfomrations to 
+not improve my model.
+
+# log transfomration of the beerhouses 
+```{r scatterplots_schools_criminals}
+ggplot(beer_data, aes(x = ((Church)), y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Schools (LOESS Curve)", 
+       x = "Schools attendence per 10k", y = "Criminals per 100k")
+
+```
+No linear relations ship at all, to me there is also no other relationship 
+that I could identify 
+
+```{r scatterplots}
+
+```library(MASS)
+
+# Fit a linear model for Box-Cox transformation
+model <- lm(Criminals ~ BeerHouses, data = beer_data)
+
+# Box-Cox transformation: Find optimal lambda
+boxcox_result <- boxcox(model, lambda = seq(-0, 1.75, 0.1))
+best_lambda <- boxcox_result$x[which.max(boxcox_result$y)]
+print(paste("Best Lambda:", best_lambda))
+
+# Apply the appropriate transformation
+if (abs(best_lambda) < 0.01) {
+  beer_data$School <- log(beer_data$School)  # Log transformation if λ ≈ 0
+} else {
+  beer_data$School <- (beer_data$School^best_lambda - 1) / best_lambda  # Box-Cox formula
+}
+```
+
+#Best λ (Lambda) Value	Recommended Transformation
+#λ = 1	No transformation needed (keep raw data).
+#λ = 0	Log transformation: data$Criminals <- log(data$Criminals + 1)
+#λ = 0.5	Square root transformation: data$Criminals <- sqrt(data$Criminals)
+#λ = -1	Inverse transformation: data$Criminals <- 1 / data$Criminals
+#λ = 2	Square transformation: data$Criminals <- data$Criminals^2
+
+```{r scatterplots}
+
+ggplot(beer_data, aes(x = 4^(1/(BeerHouses)), y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Beer Houses (LOESS Curve)", 
+       x = "Beer Houses per 100k", y = "Criminals per 100k")
+
+```
+
+```{r scatterplots}
+ggplot(beer_data, aes(x = School, y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Schools  (LOESS Curve)", 
+       x = "Beer Houses per 100k", y = "Criminals per 100k")
+
+```
+
+```{r scatterplots}
+ggplot(beer_data, aes(x = Church, y = Criminals)) +
+  geom_point(color = "blue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "red", span = 0.75) + 
+  labs(title = "Crime Rate vs Churchs (LOESS Curve)", 
+       x = "Beer Houses per 100k", y = "Criminals per 100k")
+
+```
+
+# test for influence on criminality of every feature
+# Linear models for each individual feature
+```{r scatterplots}
+model_beer <- lm(Criminals ~ BeerHouses, data = beer_data)
+model_school <- lm(Criminals ~ School, data = beer_data)
+model_church <- lm(Criminals ~ Church, data = beer_data)
+
+# Summary of each model (shows t-values and p-values)
+summary(model_beer)
+summary(model_school)
+summary(model_church)
+```
+
+Model: Criminals ~ BeerHouses
+Coefficient (slope): 0.1162
+t-value: 3.219
+p-value: 0.00263 
+
+H₀: β<sub>BeerHouses</sub> = 0 → Beer house density has no effect on crime rate
+H₁: β<sub>BeerHouses</sub> ≠ 0 → Beer house density affects crime rate
+
+Conclusion:
+Since p = 0.00263 < 0.05, we reject H₀.
+There is statistically significant evidence that beer house density is positively associated with crime rates.
+
+Model: Criminals ~ School
+Coefficient (slope): -0.05902
+t-value: -1.457
+p-value: 0.153 
+
+H₀: β<sub>School</sub> = 0 → School attendance has no effect on crime rate
+H₁: β<sub>School</sub> ≠ 0 → School attendance affects crime rate
+
+Conclusion:
+Since p = 0.153 > 0.05, we fail to reject H₀.
+There is not enough evidence to conclude that school attendance is significantly associated with crime in this model.
+
+Model: Criminals ~ Church
+Coefficient (slope): 0.0008556
+t-value: 0.022
+p-value: 0.983
+
+H₀: β<sub>Church</sub> = 0 → Church attendance has no effect on crime rate
+H₁: β<sub>Church</sub> ≠ 0 → Church attendance affects crime rate
+
+Conclusion:
+Since p = 0.983 > 0.05, we fail to reject H₀.
+There is no evidence of any relationship between church attendance and crime. The coefficient is near zero and clearly insignificant.
+
+# Fit model 
+```{r models}
+
+lm1 <- lm(Criminals ~ BeerHouses + School, data=beer_data)  # Linear
+lm2 <- lm(Criminals ~ log(BeerHouses) + School, data=beer_data)  # Log-transform BeerHouses
+lm3 <- lm(Criminals ~ BeerHouses +  School , datare=beer_data)  # Quadratic
+lm4 <- lm(Criminals ~ BeerHouses + I(BeerHouses^2) + School, datare=beer_data)  # Quadratic
+lm5 <- lm(Criminals ~ BeerHouses + School + I(School^2), data=beer_data)  # Quadratic School
+lm6 <- lm(Criminals ~ BeerHouses + cos(School), data=beer_data)  # Quadratic School
+lm7 <- lm(Criminals ~ BeerHouses, data=beer_data)  # Linear
+lm8 <- lm(Criminals ~ log(BeerHouses), data=beer_data)  # Linear
+lm9 <- lm(Criminals ~ log(BeerHouses) + BeerHouses, data=beer_data)  # Linear
+
+AIC(lm1, lm2, lm3, lm4, lm5, lm6, lm7, lm8,lm9)  # Lower AIC = better model
+BIC(lm1, lm2, lm3, lm4, lm5, lm6,lm7, lm8,lm9)
+```
+    df      AIC
+lm1  4 404.0409
+lm2  4 400.2305
+lm3  5 401.9763
+lm4  5 405.3327
+lm5  5 405.3327
+lm6  4 408.7522
+lm7  3 406.7524
+lm8  3 403.5027
+lm9  4 403.3548
+    df      BIC
+lm1  4 410.7964
+lm2  4 406.9860
+lm3  5 410.4207
+lm4  5 413.7771
+lm5  5 413.7771
+lm6  4 415.5077
+lm7  3 411.8190
+lm8  3 408.5694
+lm9  4 410.1103
+
+r$>
+
+even that schoolattendance does not ahve a big influence it reduces aic and bic a bit 
+therefore model lm2 is best 
+
+
+# Model Fitting
+```{r residuals}
+plot(lm2$fitted.values, lm2$residuals,
+     xlab = "Fitted Values", ylab = "Residuals",
+     main = "Residuals vs Fitted")
+abline(h = 0, col = "red", lty = 2)
+
+```
+```{r residuals}
+
+qqnorm(lm2$residuals)
+qqline(lm2$residuals, col = "red")
+```
+
+```{r residuals}
+
+plot(lm2, which = 4)  # Cook's distance
+```
+Points with Cook’s distance > 0.5 are usually considered moderately influential.
+
+Points with Cook’s distance > 1 are highly influential (often candidates for investigation or exclusion).
+Ther
+
+e are some outliers to the right side of the plot 
+this indicates some outliers.
+Overall the model seems not to be perfect but a good fit. 
+
+# Model Assessment
+```{r residuals}
+
+lm2_clean <- lm(Criminals ~ log(BeerHouses) + School, data = beer_data[-24, ])
+summary(lm2_clean)
+summary(lm2)
+```
+
+```{r residuals}
+plot(lm2_clean$fitted.values, lm2_clean$residuals,
+     xlab = "Fitted Values", ylab = "Residuals",
+     main = "Residuals vs Fitted")
+abline(h = 0, col = "red", lty = 2)
+
+```
+```{r residuals}
+
+qqnorm(lm2_clean$residuals)
+qqline(lm2_clean$residuals, col = "red")
+```
+
+Therefore the model y = log(beerhouses) + schoolattendance seems to be the best models
+removing the moderate outliers reduces the normality of the data show in the two 
+QQ-plots. 
+
+## Final Model Representation
+
+The linear regression model is fitted using least squares estimation.
+For the model to be valid, the following assumptions must hold for the residuals:
+
+Linearity
+
+    The relationship between the predictors and the response is linear in the parameters.
+
+    Assessed visually using scatterplots and residuals vs fitted plots.
+
+Independence
+
+    The residuals are independent from one another.
+
+    Reasonable here as each county is treated as an independent observation.
+
+Homoscedasticity
+
+    The residuals have constant variance across all levels of fitted values.
+
+    Assessed using the residuals vs fitted plot.
+
+    In our model, no strong funnel shape is observed, so this assumption is reasonably met.
+
+Normality of Residuals
+
+    The residuals are normally distributed.
+
+    Checked using Q-Q plots.
+
+    There is some deviation in the tails, especially with the full dataset.
+    However, after removing the influential observation (#24), the normality improves slightly.
+
+# Conclusions
+
+- **Beer house density is positively associated with crime**: More beer houses per capita correlate with higher crime rates.
+- **School attendance is negatively associated with crime**: Higher education levels are linked to lower crime.
+- **Church attendance was not statistically significant**: Once education and alcohol availability are considered, religion does not appear to predict crime rates.
+
+This model explains approximately 30% of the variation in crime, suggesting other factors influence crime as well. The findings align with historical social theories that increasing education and regulating alcohol outlets may help reduce crime.
+
+---
+
+# References
+
+- John Clay (1857). *On the Relation Between Crime, Popular Instruction, Attendance on Religious Worship, and Beer-House*. Journal of the Statistical Society of London, Vol. 20, pp. 22-32.
